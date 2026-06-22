@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  achievementDefinitions,
+  incrementAchievementProgress,
+  readUnlockedAchievements,
+  unlockAchievements,
+  type AchievementId,
+} from "@/lib/achievements";
 import { getGame } from "@/lib/games";
 import {
   playSound,
@@ -19,6 +26,7 @@ type Scoreboard = {
 };
 
 const EMPTY_BOARD: Cell[] = Array<Cell>(9).fill(null);
+const MATCH_PROGRESS_KEY = "completed-matches";
 const WINNING_LINES = [
   [0, 1, 2],
   [3, 4, 5],
@@ -175,6 +183,7 @@ export default function AiTicTacToePage() {
   });
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const winner = getWinner(board);
   const winningLine = useMemo(() => getWinningLine(board) ?? [], [board]);
   const winningCells = new Set<number>(winningLine);
@@ -183,6 +192,7 @@ export default function AiTicTacToePage() {
   useEffect(() => {
     const loadStoredSettings = window.setTimeout(() => {
       setIsSoundEnabled(readSoundPreference());
+      setUnlockedAchievements(readUnlockedAchievements("ai-tic-tac-toe"));
     }, 0);
 
     return () => {
@@ -202,6 +212,27 @@ export default function AiTicTacToePage() {
     const nextWinner = getWinner(nextBoard);
 
     if (nextWinner) {
+      const completedMatches = incrementAchievementProgress(
+        "ai-tic-tac-toe",
+        MATCH_PROGRESS_KEY,
+      );
+      const achievementsToUnlock: AchievementId[] = [];
+
+      if (completedMatches >= 1) {
+        achievementsToUnlock.push("first-match");
+      }
+
+      if (completedMatches >= 5) {
+        achievementsToUnlock.push("persistent-challenger");
+      }
+
+      if (nextWinner === "draw") {
+        achievementsToUnlock.push("draw-against-ai");
+      }
+
+      setUnlockedAchievements(
+        unlockAchievements("ai-tic-tac-toe", achievementsToUnlock),
+      );
       setScoreboard((current) => updateScoreboard(current, nextWinner));
       playOutcomeSound(nextWinner, isSoundEnabled);
       return true;
@@ -362,6 +393,39 @@ export default function AiTicTacToePage() {
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400">
               You are X / AI is O
             </p>
+          </div>
+
+          <div className="mt-6 max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
+                Achievements
+              </p>
+              <p className="text-xs font-bold text-amber-100">
+                {unlockedAchievements.length}/
+                {achievementDefinitions["ai-tic-tac-toe"].length}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {achievementDefinitions["ai-tic-tac-toe"].map((achievement) => {
+                const isUnlocked = unlockedAchievements.includes(achievement.id);
+
+                return (
+                  <div
+                    key={achievement.id}
+                    className={`rounded-md border px-3 py-3 ${
+                      isUnlocked
+                        ? "border-amber-300/25 bg-amber-300/10 text-white"
+                        : "border-white/10 bg-black/20 text-zinc-500"
+                    }`}
+                  >
+                    <p className="text-sm font-black">{achievement.title}</p>
+                    <p className="mt-1 text-xs leading-5">
+                      {achievement.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

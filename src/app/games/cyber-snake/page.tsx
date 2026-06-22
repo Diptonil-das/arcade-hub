@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import {
+  achievementDefinitions,
+  readUnlockedAchievements,
+  unlockAchievements,
+  type AchievementId,
+} from "@/lib/achievements";
 import { getGame } from "@/lib/games";
 import {
   playSound,
@@ -233,12 +239,14 @@ export default function CyberSnakePage() {
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const game = getGame("cyber-snake");
 
   useEffect(() => {
     const loadStoredSettings = window.setTimeout(() => {
       setBestScore(readBestScore());
       setIsSoundEnabled(readSoundPreference());
+      setUnlockedAchievements(readUnlockedAchievements("cyber-snake"));
     }, 0);
 
     return () => {
@@ -266,6 +274,36 @@ export default function CyberSnakePage() {
       window.clearTimeout(saveNewBestScore);
     };
   }, [bestScore, state.score]);
+
+  useEffect(() => {
+    const achievementsToUnlock: AchievementId[] = [];
+
+    if (state.score >= 10) {
+      achievementsToUnlock.push("first-bite");
+    }
+
+    if (state.score >= 25) {
+      achievementsToUnlock.push("snake-apprentice");
+    }
+
+    if (state.score >= 50) {
+      achievementsToUnlock.push("snake-master");
+    }
+
+    if (achievementsToUnlock.length === 0) {
+      return;
+    }
+
+    const unlockScoreAchievements = window.setTimeout(() => {
+      setUnlockedAchievements(
+        unlockAchievements("cyber-snake", achievementsToUnlock),
+      );
+    }, 0);
+
+    return () => {
+      window.clearTimeout(unlockScoreAchievements);
+    };
+  }, [state.score]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -440,6 +478,39 @@ export default function CyberSnakePage() {
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400">
               Arrow keys to steer
             </p>
+          </div>
+
+          <div className="mt-6 max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
+                Achievements
+              </p>
+              <p className="text-xs font-bold text-cyan-100">
+                {unlockedAchievements.length}/
+                {achievementDefinitions["cyber-snake"].length}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {achievementDefinitions["cyber-snake"].map((achievement) => {
+                const isUnlocked = unlockedAchievements.includes(achievement.id);
+
+                return (
+                  <div
+                    key={achievement.id}
+                    className={`rounded-md border px-3 py-3 ${
+                      isUnlocked
+                        ? "border-cyan-300/25 bg-cyan-300/10 text-white"
+                        : "border-white/10 bg-black/20 text-zinc-500"
+                    }`}
+                  >
+                    <p className="text-sm font-black">{achievement.title}</p>
+                    <p className="mt-1 text-xs leading-5">
+                      {achievement.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

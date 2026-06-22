@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import {
+  achievementDefinitions,
+  readUnlockedAchievements,
+  unlockAchievements,
+  type AchievementId,
+} from "@/lib/achievements";
 import { getGame } from "@/lib/games";
 import {
   playSound,
@@ -296,12 +302,14 @@ export default function SpaceDodgerPage() {
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const game = getGame("space-dodger");
 
   useEffect(() => {
     const loadStoredSettings = window.setTimeout(() => {
       setBestScore(readBestScore());
       setIsSoundEnabled(readSoundPreference());
+      setUnlockedAchievements(readUnlockedAchievements("space-dodger"));
     }, 0);
 
     return () => {
@@ -329,6 +337,36 @@ export default function SpaceDodgerPage() {
       window.clearTimeout(saveNewBestScore);
     };
   }, [bestScore, state.score]);
+
+  useEffect(() => {
+    const achievementsToUnlock: AchievementId[] = [];
+
+    if (state.score >= 30) {
+      achievementsToUnlock.push("survivor");
+    }
+
+    if (state.score >= 60) {
+      achievementsToUnlock.push("veteran-pilot");
+    }
+
+    if (state.score >= 120) {
+      achievementsToUnlock.push("space-legend");
+    }
+
+    if (achievementsToUnlock.length === 0) {
+      return;
+    }
+
+    const unlockScoreAchievements = window.setTimeout(() => {
+      setUnlockedAchievements(
+        unlockAchievements("space-dodger", achievementsToUnlock),
+      );
+    }, 0);
+
+    return () => {
+      window.clearTimeout(unlockScoreAchievements);
+    };
+  }, [state.score]);
 
   useEffect(() => {
     const setKey = (key: string, isPressed: boolean) => {
@@ -545,6 +583,39 @@ export default function SpaceDodgerPage() {
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400">
               Arrow keys move left / right
             </p>
+          </div>
+
+          <div className="mt-6 max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
+                Achievements
+              </p>
+              <p className="text-xs font-bold text-fuchsia-100">
+                {unlockedAchievements.length}/
+                {achievementDefinitions["space-dodger"].length}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {achievementDefinitions["space-dodger"].map((achievement) => {
+                const isUnlocked = unlockedAchievements.includes(achievement.id);
+
+                return (
+                  <div
+                    key={achievement.id}
+                    className={`rounded-md border px-3 py-3 ${
+                      isUnlocked
+                        ? "border-fuchsia-300/25 bg-fuchsia-300/10 text-white"
+                        : "border-white/10 bg-black/20 text-zinc-500"
+                    }`}
+                  >
+                    <p className="text-sm font-black">{achievement.title}</p>
+                    <p className="mt-1 text-xs leading-5">
+                      {achievement.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
