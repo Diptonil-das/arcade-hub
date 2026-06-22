@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getGame } from "@/lib/games";
+import {
+  playSound,
+  readSoundPreference,
+  saveSoundPreference,
+  unlockAudio,
+} from "@/lib/sound";
 
 const GRID_SIZE = 24;
 const CANVAS_SIZE = 576;
@@ -222,17 +228,21 @@ function drawGame(canvas: HTMLCanvasElement, state: GameState) {
 
 export default function CyberSnakePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previousGameOverRef = useRef(false);
+  const previousScoreRef = useRef(0);
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const game = getGame("cyber-snake");
 
   useEffect(() => {
-    const loadBestScore = window.setTimeout(() => {
+    const loadStoredSettings = window.setTimeout(() => {
       setBestScore(readBestScore());
+      setIsSoundEnabled(readSoundPreference());
     }, 0);
 
     return () => {
-      window.clearTimeout(loadBestScore);
+      window.clearTimeout(loadStoredSettings);
     };
   }, []);
 
@@ -272,6 +282,7 @@ export default function CyberSnakePage() {
       }
 
       event.preventDefault();
+      unlockAudio();
       setState((current) => {
         if (current.gameOver || isOpposite(current.direction, nextDirection)) {
           return current;
@@ -310,6 +321,39 @@ export default function CyberSnakePage() {
       drawGame(canvasRef.current, state);
     }
   }, [state]);
+
+  useEffect(() => {
+    if (state.score > previousScoreRef.current) {
+      playSound("collect", isSoundEnabled);
+    }
+
+    previousScoreRef.current = state.score;
+  }, [isSoundEnabled, state.score]);
+
+  useEffect(() => {
+    if (state.gameOver && !previousGameOverRef.current) {
+      playSound("game-over", isSoundEnabled);
+    }
+
+    previousGameOverRef.current = state.gameOver;
+  }, [isSoundEnabled, state.gameOver]);
+
+  const restart = () => {
+    unlockAudio();
+    previousGameOverRef.current = false;
+    previousScoreRef.current = 0;
+    setState(createInitialState());
+  };
+
+  const toggleSound = () => {
+    unlockAudio();
+    setIsSoundEnabled((current) => {
+      const nextValue = !current;
+      saveSoundPreference(nextValue);
+
+      return nextValue;
+    });
+  };
 
   if (!game) {
     return null;
@@ -381,10 +425,17 @@ export default function CyberSnakePage() {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => setState(createInitialState())}
+              onClick={restart}
               className="h-12 rounded-md bg-cyan-300 px-6 text-sm font-black uppercase tracking-[0.18em] text-zinc-950 transition hover:bg-cyan-200"
             >
               Restart
+            </button>
+            <button
+              type="button"
+              onClick={toggleSound}
+              className="h-12 rounded-md border border-white/10 bg-white/[0.04] px-5 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:border-cyan-200/50 hover:bg-cyan-300/10"
+            >
+              Sound {isSoundEnabled ? "On" : "Off"}
             </button>
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400">
               Arrow keys to steer
@@ -418,7 +469,7 @@ export default function CyberSnakePage() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setState(createInitialState())}
+                    onClick={restart}
                     className="mt-6 h-11 rounded-md bg-fuchsia-300 px-5 text-sm font-black uppercase tracking-[0.18em] text-zinc-950 transition hover:bg-fuchsia-200"
                   >
                     Restart

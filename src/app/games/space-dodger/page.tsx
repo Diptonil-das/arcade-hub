@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getGame } from "@/lib/games";
+import {
+  playSound,
+  readSoundPreference,
+  saveSoundPreference,
+  unlockAudio,
+} from "@/lib/sound";
 
 const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 720;
@@ -285,17 +291,21 @@ export default function SpaceDodgerPage() {
   const inputRef = useRef<InputState>({ left: false, right: false });
   const lastFrameRef = useRef<number | null>(null);
   const asteroidIdRef = useRef(0);
+  const previousGameOverRef = useRef(false);
+  const previousMilestoneRef = useRef(0);
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const game = getGame("space-dodger");
 
   useEffect(() => {
-    const loadBestScore = window.setTimeout(() => {
+    const loadStoredSettings = window.setTimeout(() => {
       setBestScore(readBestScore());
+      setIsSoundEnabled(readSoundPreference());
     }, 0);
 
     return () => {
-      window.clearTimeout(loadBestScore);
+      window.clearTimeout(loadStoredSettings);
     };
   }, []);
 
@@ -337,6 +347,7 @@ export default function SpaceDodgerPage() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (setKey(event.key, true)) {
         event.preventDefault();
+        unlockAudio();
       }
     };
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -411,11 +422,42 @@ export default function SpaceDodgerPage() {
     }
   }, [state]);
 
+  useEffect(() => {
+    if (state.gameOver && !previousGameOverRef.current) {
+      playSound("game-over", isSoundEnabled);
+    }
+
+    previousGameOverRef.current = state.gameOver;
+  }, [isSoundEnabled, state.gameOver]);
+
+  useEffect(() => {
+    const milestone = Math.floor(state.score / 100);
+
+    if (milestone > previousMilestoneRef.current) {
+      playSound("milestone", isSoundEnabled);
+    }
+
+    previousMilestoneRef.current = milestone;
+  }, [isSoundEnabled, state.score]);
+
   const restart = () => {
+    unlockAudio();
     inputRef.current = { left: false, right: false };
     lastFrameRef.current = null;
     asteroidIdRef.current = 0;
+    previousGameOverRef.current = false;
+    previousMilestoneRef.current = 0;
     setState(createInitialState());
+  };
+
+  const toggleSound = () => {
+    unlockAudio();
+    setIsSoundEnabled((current) => {
+      const nextValue = !current;
+      saveSoundPreference(nextValue);
+
+      return nextValue;
+    });
   };
 
   if (!game) {
@@ -492,6 +534,13 @@ export default function SpaceDodgerPage() {
               className="h-12 rounded-md bg-cyan-300 px-6 text-sm font-black uppercase tracking-[0.18em] text-zinc-950 transition hover:bg-cyan-200"
             >
               Restart
+            </button>
+            <button
+              type="button"
+              onClick={toggleSound}
+              className="h-12 rounded-md border border-white/10 bg-white/[0.04] px-5 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:border-fuchsia-200/50 hover:bg-fuchsia-300/10"
+            >
+              Sound {isSoundEnabled ? "On" : "Off"}
             </button>
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400">
               Arrow keys move left / right

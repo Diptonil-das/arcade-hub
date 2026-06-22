@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getGame } from "@/lib/games";
+import {
+  playSound,
+  readSoundPreference,
+  saveSoundPreference,
+  unlockAudio,
+} from "@/lib/sound";
 
 type Cell = "X" | "O" | null;
 type Winner = "X" | "O" | "draw" | null;
@@ -142,6 +148,22 @@ function getStatusText(winner: Winner, isAiThinking: boolean) {
   return isAiThinking ? "AI is calculating." : "Your move. Place X.";
 }
 
+function playOutcomeSound(winner: Winner, isSoundEnabled: boolean) {
+  if (winner === "X") {
+    playSound("win", isSoundEnabled);
+    return;
+  }
+
+  if (winner === "O") {
+    playSound("loss", isSoundEnabled);
+    return;
+  }
+
+  if (winner === "draw") {
+    playSound("draw", isSoundEnabled);
+  }
+}
+
 export default function AiTicTacToePage() {
   const game = getGame("ai-tic-tac-toe");
   const aiTimeoutRef = useRef<number | null>(null);
@@ -152,10 +174,21 @@ export default function AiTicTacToePage() {
     wins: 0,
   });
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const winner = getWinner(board);
   const winningLine = useMemo(() => getWinningLine(board) ?? [], [board]);
   const winningCells = new Set<number>(winningLine);
   const movesPlayed = board.filter(Boolean).length;
+
+  useEffect(() => {
+    const loadStoredSettings = window.setTimeout(() => {
+      setIsSoundEnabled(readSoundPreference());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(loadStoredSettings);
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -170,6 +203,7 @@ export default function AiTicTacToePage() {
 
     if (nextWinner) {
       setScoreboard((current) => updateScoreboard(current, nextWinner));
+      playOutcomeSound(nextWinner, isSoundEnabled);
       return true;
     }
 
@@ -180,6 +214,9 @@ export default function AiTicTacToePage() {
     if (board[index] || winner || isAiThinking) {
       return;
     }
+
+    unlockAudio();
+    playSound("move", isSoundEnabled);
 
     const humanBoard = [...board];
     humanBoard[index] = "X";
@@ -208,8 +245,11 @@ export default function AiTicTacToePage() {
         aiBoard[aiMove] = "O";
         const aiWinner = getWinner(aiBoard);
 
+        playSound("move", isSoundEnabled);
+
         if (aiWinner) {
           setScoreboard((current) => updateScoreboard(current, aiWinner));
+          playOutcomeSound(aiWinner, isSoundEnabled);
         }
 
         return aiBoard;
@@ -220,6 +260,8 @@ export default function AiTicTacToePage() {
   };
 
   const restartGame = () => {
+    unlockAudio();
+
     if (aiTimeoutRef.current !== null) {
       window.clearTimeout(aiTimeoutRef.current);
       aiTimeoutRef.current = null;
@@ -227,6 +269,16 @@ export default function AiTicTacToePage() {
 
     setBoard(EMPTY_BOARD);
     setIsAiThinking(false);
+  };
+
+  const toggleSound = () => {
+    unlockAudio();
+    setIsSoundEnabled((current) => {
+      const nextValue = !current;
+      saveSoundPreference(nextValue);
+
+      return nextValue;
+    });
   };
 
   if (!game) {
@@ -299,6 +351,13 @@ export default function AiTicTacToePage() {
               className="h-12 rounded-md bg-cyan-300 px-6 text-sm font-black uppercase tracking-[0.18em] text-zinc-950 transition hover:bg-cyan-200"
             >
               Restart Game
+            </button>
+            <button
+              type="button"
+              onClick={toggleSound}
+              className="h-12 rounded-md border border-white/10 bg-white/[0.04] px-5 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:border-amber-200/50 hover:bg-amber-300/10"
+            >
+              Sound {isSoundEnabled ? "On" : "Off"}
             </button>
             <p className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400">
               You are X / AI is O
