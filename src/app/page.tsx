@@ -64,6 +64,9 @@ export default function Home() {
             <a className="transition hover:text-amber-100" href="#games">
               Games
             </a>
+            <Link className="transition hover:text-emerald-200" href="/profile">
+              Profile
+            </Link>
           </nav>
         </header>
 
@@ -92,6 +95,12 @@ export default function Home() {
                 className="inline-flex h-12 items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-6 text-sm font-bold uppercase tracking-[0.18em] text-white transition hover:border-fuchsia-300/50 hover:bg-fuchsia-300/10"
               >
                 Play Featured
+              </Link>
+              <Link
+                href="/profile"
+                className="inline-flex h-12 items-center justify-center rounded-md border border-emerald-300/25 bg-emerald-300/10 px-6 text-sm font-bold uppercase tracking-[0.18em] text-emerald-100 transition hover:border-emerald-200/50 hover:bg-emerald-300/15"
+              >
+                View Profile
               </Link>
             </div>
           </div>
