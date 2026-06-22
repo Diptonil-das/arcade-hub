@@ -12,6 +12,7 @@ const PLAYER_Y = CANVAS_HEIGHT - 92;
 const PLAYER_SPEED = 430;
 const ASTEROID_SPAWN_MS = 720;
 const SCORE_RATE = 14;
+const BEST_SCORE_STORAGE_KEY = "arcade-hub:space-dodger:best-score";
 
 type Asteroid = {
   id: number;
@@ -49,6 +50,25 @@ function createInitialState(): GameState {
     },
     score: 0,
   };
+}
+
+function readBestScore() {
+  try {
+    const storedScore = window.localStorage.getItem(BEST_SCORE_STORAGE_KEY);
+    const parsedScore = storedScore ? Number.parseInt(storedScore, 10) : 0;
+
+    return Number.isFinite(parsedScore) && parsedScore > 0 ? parsedScore : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveBestScore(score: number) {
+  try {
+    window.localStorage.setItem(BEST_SCORE_STORAGE_KEY, String(score));
+  } catch {
+    // Best-score persistence should never interrupt gameplay.
+  }
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -266,7 +286,39 @@ export default function SpaceDodgerPage() {
   const lastFrameRef = useRef<number | null>(null);
   const asteroidIdRef = useRef(0);
   const [state, setState] = useState<GameState>(() => createInitialState());
+  const [bestScore, setBestScore] = useState(0);
   const game = getGame("space-dodger");
+
+  useEffect(() => {
+    const loadBestScore = window.setTimeout(() => {
+      setBestScore(readBestScore());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(loadBestScore);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (state.score <= bestScore) {
+      return;
+    }
+
+    const saveNewBestScore = window.setTimeout(() => {
+      setBestScore((currentBestScore) => {
+        if (state.score <= currentBestScore) {
+          return currentBestScore;
+        }
+
+        saveBestScore(state.score);
+        return state.score;
+      });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(saveNewBestScore);
+    };
+  }, [bestScore, state.score]);
 
   useEffect(() => {
     const setKey = (key: string, isPressed: boolean) => {
@@ -402,12 +454,18 @@ export default function SpaceDodgerPage() {
             {game.description}
           </p>
 
-          <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-md border border-cyan-300/20 bg-cyan-300/10 px-4 py-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-100">
                 Score
               </p>
               <p className="mt-1 text-3xl font-black text-white">{state.score}</p>
+            </div>
+            <div className="rounded-md border border-sky-300/20 bg-sky-300/10 px-4 py-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-100">
+                Best Score
+              </p>
+              <p className="mt-1 text-3xl font-black text-white">{bestScore}</p>
             </div>
             <div className="rounded-md border border-fuchsia-300/20 bg-fuchsia-300/10 px-4 py-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-fuchsia-100">

@@ -8,6 +8,7 @@ const GRID_SIZE = 24;
 const CANVAS_SIZE = 576;
 const CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
 const TICK_RATE_MS = 105;
+const BEST_SCORE_STORAGE_KEY = "arcade-hub:cyber-snake:best-score";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -84,6 +85,25 @@ function createInitialState(): GameState {
     score: 0,
     snake: initialSnake,
   };
+}
+
+function readBestScore() {
+  try {
+    const storedScore = window.localStorage.getItem(BEST_SCORE_STORAGE_KEY);
+    const parsedScore = storedScore ? Number.parseInt(storedScore, 10) : 0;
+
+    return Number.isFinite(parsedScore) && parsedScore > 0 ? parsedScore : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveBestScore(score: number) {
+  try {
+    window.localStorage.setItem(BEST_SCORE_STORAGE_KEY, String(score));
+  } catch {
+    // Best-score persistence should never interrupt gameplay.
+  }
 }
 
 function advanceGame(state: GameState): GameState {
@@ -203,7 +223,39 @@ function drawGame(canvas: HTMLCanvasElement, state: GameState) {
 export default function CyberSnakePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [state, setState] = useState<GameState>(() => createInitialState());
+  const [bestScore, setBestScore] = useState(0);
   const game = getGame("cyber-snake");
+
+  useEffect(() => {
+    const loadBestScore = window.setTimeout(() => {
+      setBestScore(readBestScore());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(loadBestScore);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (state.score <= bestScore) {
+      return;
+    }
+
+    const saveNewBestScore = window.setTimeout(() => {
+      setBestScore((currentBestScore) => {
+        if (state.score <= currentBestScore) {
+          return currentBestScore;
+        }
+
+        saveBestScore(state.score);
+        return state.score;
+      });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(saveNewBestScore);
+    };
+  }, [bestScore, state.score]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -295,12 +347,18 @@ export default function CyberSnakePage() {
             {game.description}
           </p>
 
-          <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-md border border-cyan-300/20 bg-cyan-300/10 px-4 py-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-100">
                 Score
               </p>
               <p className="mt-1 text-3xl font-black text-white">{state.score}</p>
+            </div>
+            <div className="rounded-md border border-sky-300/20 bg-sky-300/10 px-4 py-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-100">
+                Best Score
+              </p>
+              <p className="mt-1 text-3xl font-black text-white">{bestScore}</p>
             </div>
             <div className="rounded-md border border-emerald-300/20 bg-emerald-300/10 px-4 py-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald-100">
