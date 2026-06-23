@@ -53,6 +53,23 @@ export const achievementDefinitions = {
       title: "Draw Against AI",
     },
   ],
+  "2048": [
+    {
+      description: "Create your first merged tile.",
+      id: "first-merge",
+      title: "First Merge",
+    },
+    {
+      description: "Reach tile 512.",
+      id: "512-club",
+      title: "512 Club",
+    },
+    {
+      description: "Reach tile 2048.",
+      id: "2048-legend",
+      title: "2048 Legend",
+    },
+  ],
 } as const;
 
 export type AchievementGame = keyof typeof achievementDefinitions;

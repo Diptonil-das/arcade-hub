@@ -26,6 +26,15 @@ export const games = [
     accent: "from-amber-200 via-orange-400 to-rose-500",
     stat: "Strategy",
   },
+  {
+    title: "2048",
+    slug: "2048",
+    label: "Tile Fusion",
+    description:
+      "Slide neon number tiles, chain merges, and build toward the legendary 2048 tile.",
+    accent: "from-lime-200 via-emerald-300 to-cyan-400",
+    stat: "Puzzle",
+  },
 ] as const;
 
 export type Game = (typeof games)[number];

@@ -21,11 +21,13 @@ const initialProfileState: ProfileState = {
   globalStats: {
     favoriteGame: "No plays yet",
     gamePlayCounts: {
+      "2048": 0,
       "ai-tic-tac-toe": 0,
       "cyber-snake": 0,
       "space-dodger": 0,
     },
     overallProgressPercentage: 0,
+    puzzleBestScore: 0,
     snakeBestScore: 0,
     spaceDodgerBestScore: 0,
     ticTacToeRecord: {
@@ -39,6 +41,7 @@ const initialProfileState: ProfileState = {
   },
   isSoundEnabled: true,
   unlockedAchievements: {
+    "2048": [],
     "ai-tic-tac-toe": [],
     "cyber-snake": [],
     "space-dodger": [],
@@ -46,6 +49,7 @@ const initialProfileState: ProfileState = {
 };
 
 const gameAccent = {
+  "2048": "border-lime-300/25 bg-lime-300/10 text-lime-100",
   "ai-tic-tac-toe": "border-amber-300/25 bg-amber-300/10 text-amber-100",
   "cyber-snake": "border-cyan-300/25 bg-cyan-300/10 text-cyan-100",
   "space-dodger": "border-fuchsia-300/25 bg-fuchsia-300/10 text-fuchsia-100",
@@ -56,6 +60,7 @@ function loadProfileState(): ProfileState {
     globalStats: readGlobalStats(),
     isSoundEnabled: readSoundPreference(),
     unlockedAchievements: {
+      "2048": readUnlockedAchievements("2048"),
       "ai-tic-tac-toe": readUnlockedAchievements("ai-tic-tac-toe"),
       "cyber-snake": readUnlockedAchievements("cyber-snake"),
       "space-dodger": readUnlockedAchievements("space-dodger"),
@@ -107,6 +112,11 @@ export default function ProfilePage() {
       label: "Dodger Best",
       value: profile.globalStats.spaceDodgerBestScore,
       className: "border-violet-300/20 bg-violet-300/10 text-violet-100",
+    },
+    {
+      label: "2048 Best",
+      value: profile.globalStats.puzzleBestScore,
+      className: "border-lime-300/20 bg-lime-300/10 text-lime-100",
     },
   ];
   const ticTacToeRecordCards = [
@@ -200,7 +210,7 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
             {globalStatCards.map((stat) => (
               <div
                 key={stat.label}

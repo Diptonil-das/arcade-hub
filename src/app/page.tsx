@@ -20,6 +20,12 @@ const gameDetails = {
     features: ["Unbeatable Minimax AI", "Win-line highlights", "Session scoreboard"],
     previewCells: [0, 4, 8, 2, 6, 10, 14],
   },
+  "2048": {
+    difficulty: "Medium",
+    type: "Number Puzzle",
+    features: ["4x4 merge board", "Swipe and arrow controls", "Persistent best score"],
+    previewCells: [3, 8, 9, 10, 15, 16, 17],
+  },
 } satisfies Record<
   (typeof games)[number]["slug"],
   {
@@ -31,7 +37,7 @@ const gameDetails = {
 >;
 
 const portalStats = [
-  { label: "Games Live", value: "3" },
+  { label: "Games Live", value: "4" },
   { label: "Browser Playable", value: "100%" },
   { label: "Downloads Required", value: "0" },
 ];
@@ -185,12 +191,12 @@ export default function Home() {
               </h2>
             </div>
             <p className="max-w-xl text-zinc-400">
-              Three finished arcade modes cover reflexes, survival, and
+              Four finished arcade modes cover reflexes, survival, puzzles, and
               strategy. Each one launches directly from this portal.
             </p>
           </div>
 
-          <div id="games" className="mt-10 grid gap-5 lg:grid-cols-3">
+          <div id="games" className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {games.map((game, index) => {
               const details = gameDetails[game.slug];
 

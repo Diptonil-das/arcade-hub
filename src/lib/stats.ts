@@ -6,6 +6,7 @@ import {
 import { games, type Game } from "@/lib/games";
 
 const BEST_SCORE_KEYS = {
+  "2048": "arcade-hub:2048:best-score",
   "cyber-snake": "arcade-hub:cyber-snake:best-score",
   "space-dodger": "arcade-hub:space-dodger:best-score",
 } as const;
@@ -21,6 +22,7 @@ type TicTacToeRecord = {
 };
 
 export type GlobalStats = {
+  puzzleBestScore: number;
   favoriteGame: string;
   gamePlayCounts: Record<GameSlug, number>;
   overallProgressPercentage: number;
@@ -148,6 +150,7 @@ export function readGlobalStats(): GlobalStats {
             (totalAchievementsUnlocked / totalAvailableAchievements) * 100,
           )
         : 0,
+    puzzleBestScore: readStoredNumber(BEST_SCORE_KEYS["2048"]),
     snakeBestScore: readStoredNumber(BEST_SCORE_KEYS["cyber-snake"]),
     spaceDodgerBestScore: readStoredNumber(BEST_SCORE_KEYS["space-dodger"]),
     ticTacToeRecord: readTicTacToeRecord(),
