@@ -447,35 +447,35 @@ export default function Game2048Page() {
             </p>
 
             <div className="mt-4 grid max-w-xl grid-cols-2 gap-2 lg:mt-8 lg:gap-3 xl:grid-cols-4">
-              <div className="flex min-h-22 flex-col justify-between rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-3 sm:px-4">
+              <div className="flex min-h-22 min-w-0 flex-col items-center justify-between rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-3 text-center sm:px-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-100 sm:text-[11px]">
                   Score
                 </p>
-                <p className="mt-2 text-3xl font-black leading-none text-white tabular-nums">
+                <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.35rem,5.5vw,1.75rem)] font-black leading-none text-white tabular-nums">
                   {state.score}
                 </p>
               </div>
-              <div className="flex min-h-22 flex-col justify-between rounded-md border border-sky-300/20 bg-sky-300/10 px-3 py-3 sm:px-4">
+              <div className="flex min-h-22 min-w-0 flex-col items-center justify-between rounded-md border border-sky-300/20 bg-sky-300/10 px-3 py-3 text-center sm:px-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-100 sm:text-[11px]">
                   Best Score
                 </p>
-                <p className="mt-2 text-3xl font-black leading-none text-white tabular-nums">
+                <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.35rem,5.5vw,1.75rem)] font-black leading-none text-white tabular-nums">
                   {bestScore}
                 </p>
               </div>
-              <div className="flex min-h-22 flex-col justify-between rounded-md border border-lime-300/20 bg-lime-300/10 px-3 py-3 sm:px-4">
+              <div className="flex min-h-22 min-w-0 flex-col items-center justify-between rounded-md border border-lime-300/20 bg-lime-300/10 px-3 py-3 text-center sm:px-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-lime-100 sm:text-[11px]">
                   Max Tile
                 </p>
-                <p className="mt-2 text-3xl font-black leading-none text-white tabular-nums">
+                <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.35rem,5.5vw,1.75rem)] font-black leading-none text-white tabular-nums">
                   {state.maxTile}
                 </p>
               </div>
-              <div className="flex min-h-22 flex-col justify-between rounded-md border border-fuchsia-300/20 bg-fuchsia-300/10 px-3 py-3 sm:px-4">
+              <div className="flex min-h-22 min-w-0 flex-col items-center justify-between rounded-md border border-fuchsia-300/20 bg-fuchsia-300/10 px-3 py-3 text-center sm:px-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-fuchsia-100 sm:text-[11px]">
                   Status
                 </p>
-                <p className="mt-2 text-lg font-black uppercase leading-none tracking-[0.12em] text-white sm:text-xl">
+                <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-base font-black uppercase leading-none tracking-[0.1em] text-white sm:text-lg">
                   {state.gameOver ? "Game Over" : hasStarted ? "Live" : "Ready"}
                 </p>
               </div>
