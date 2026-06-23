@@ -501,7 +501,7 @@ export default function CyberSnakePage() {
               </p>
               <p
                 key={scorePulseKey}
-                className="score-pop mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.35rem,5.5vw,1.75rem)] font-black leading-none text-white tabular-nums"
+                className="score-pop mt-2 max-w-full break-words text-[clamp(1.15rem,4.8vw,1.55rem)] font-black leading-none text-white tabular-nums"
               >
                 {state.score}
               </p>
@@ -510,7 +510,7 @@ export default function CyberSnakePage() {
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-100 sm:text-[11px]">
                 Best Score
               </p>
-              <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.35rem,5.5vw,1.75rem)] font-black leading-none text-white tabular-nums">
+              <p className="mt-2 max-w-full break-words text-[clamp(1.15rem,4.8vw,1.55rem)] font-black leading-none text-white tabular-nums">
                 {bestScore}
               </p>
             </div>
@@ -518,7 +518,7 @@ export default function CyberSnakePage() {
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-100 sm:text-[11px]">
                 Length
               </p>
-              <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.35rem,5.5vw,1.75rem)] font-black leading-none text-white tabular-nums">
+              <p className="mt-2 max-w-full break-words text-[clamp(1.15rem,4.8vw,1.55rem)] font-black leading-none text-white tabular-nums">
                 {state.snake.length}
               </p>
             </div>
@@ -526,7 +526,7 @@ export default function CyberSnakePage() {
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-fuchsia-100 sm:text-[11px]">
                 Status
               </p>
-              <p className="mt-2 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-base font-black uppercase leading-none tracking-[0.1em] text-white sm:text-lg">
+              <p className="mt-2 max-w-full break-words text-base font-black uppercase leading-none tracking-[0.1em] text-white sm:text-lg">
                 {state.gameOver ? "Game Over" : hasStarted ? "Live" : "Ready"}
               </p>
             </div>
