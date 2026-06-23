@@ -9,25 +9,33 @@ import {
 } from "@/lib/achievements";
 import { games } from "@/lib/games";
 import { readSoundPreference } from "@/lib/sound";
-
-const BEST_SCORE_KEYS = {
-  "cyber-snake": "arcade-hub:cyber-snake:best-score",
-  "space-dodger": "arcade-hub:space-dodger:best-score",
-} as const;
+import { readGlobalStats, type GlobalStats } from "@/lib/stats";
 
 type ProfileState = {
-  bestScores: {
-    cyberSnake: number;
-    spaceDodger: number;
-  };
+  globalStats: GlobalStats;
   isSoundEnabled: boolean;
   unlockedAchievements: Record<AchievementGame, string[]>;
 };
 
 const initialProfileState: ProfileState = {
-  bestScores: {
-    cyberSnake: 0,
-    spaceDodger: 0,
+  globalStats: {
+    favoriteGame: "No plays yet",
+    gamePlayCounts: {
+      "ai-tic-tac-toe": 0,
+      "cyber-snake": 0,
+      "space-dodger": 0,
+    },
+    overallProgressPercentage: 0,
+    snakeBestScore: 0,
+    spaceDodgerBestScore: 0,
+    ticTacToeRecord: {
+      draws: 0,
+      losses: 0,
+      wins: 0,
+    },
+    totalAchievementsUnlocked: 0,
+    totalAvailableAchievements: 0,
+    totalGamesPlayed: 0,
   },
   isSoundEnabled: true,
   unlockedAchievements: {
@@ -43,23 +51,9 @@ const gameAccent = {
   "space-dodger": "border-fuchsia-300/25 bg-fuchsia-300/10 text-fuchsia-100",
 } satisfies Record<AchievementGame, string>;
 
-function readStoredScore(storageKey: string) {
-  try {
-    const storedScore = window.localStorage.getItem(storageKey);
-    const parsedScore = storedScore ? Number.parseInt(storedScore, 10) : 0;
-
-    return Number.isFinite(parsedScore) && parsedScore > 0 ? parsedScore : 0;
-  } catch {
-    return 0;
-  }
-}
-
 function loadProfileState(): ProfileState {
   return {
-    bestScores: {
-      cyberSnake: readStoredScore(BEST_SCORE_KEYS["cyber-snake"]),
-      spaceDodger: readStoredScore(BEST_SCORE_KEYS["space-dodger"]),
-    },
+    globalStats: readGlobalStats(),
     isSoundEnabled: readSoundPreference(),
     unlockedAchievements: {
       "ai-tic-tac-toe": readUnlockedAchievements("ai-tic-tac-toe"),
@@ -83,6 +77,43 @@ export default function ProfilePage() {
     (total, achievements) => total + achievements.length,
     0,
   );
+  const globalStatCards = [
+    {
+      label: "Games Played",
+      value: profile.globalStats.totalGamesPlayed,
+      className: "border-cyan-300/20 bg-cyan-300/10 text-cyan-100",
+    },
+    {
+      label: "Achievements",
+      value: `${profile.globalStats.totalAchievementsUnlocked}/${profile.globalStats.totalAvailableAchievements}`,
+      className: "border-emerald-300/20 bg-emerald-300/10 text-emerald-100",
+    },
+    {
+      label: "Progress",
+      value: `${profile.globalStats.overallProgressPercentage}%`,
+      className: "border-amber-300/20 bg-amber-300/10 text-amber-100",
+    },
+    {
+      label: "Favorite",
+      value: profile.globalStats.favoriteGame,
+      className: "border-fuchsia-300/20 bg-fuchsia-300/10 text-fuchsia-100",
+    },
+    {
+      label: "Snake Best",
+      value: profile.globalStats.snakeBestScore,
+      className: "border-sky-300/20 bg-sky-300/10 text-sky-100",
+    },
+    {
+      label: "Dodger Best",
+      value: profile.globalStats.spaceDodgerBestScore,
+      className: "border-violet-300/20 bg-violet-300/10 text-violet-100",
+    },
+  ];
+  const ticTacToeRecordCards = [
+    ["Wins", profile.globalStats.ticTacToeRecord.wins],
+    ["Losses", profile.globalStats.ticTacToeRecord.losses],
+    ["Draws", profile.globalStats.ticTacToeRecord.draws],
+  ] as const;
 
   useEffect(() => {
     const loadStoredProfile = window.setTimeout(() => {
@@ -140,7 +171,7 @@ export default function ProfilePage() {
                 Snake Best
               </p>
               <p className="mt-2 text-4xl font-black">
-                {profile.bestScores.cyberSnake}
+                {profile.globalStats.snakeBestScore}
               </p>
             </div>
             <div className="rounded-lg border border-fuchsia-300/20 bg-fuchsia-300/10 px-5 py-5">
@@ -148,11 +179,85 @@ export default function ProfilePage() {
                 Dodger Best
               </p>
               <p className="mt-2 text-4xl font-black">
-                {profile.bestScores.spaceDodger}
+                {profile.globalStats.spaceDodgerBestScore}
               </p>
             </div>
           </div>
         </div>
+
+        <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.04] p-5 shadow-xl shadow-black/25">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
+                Global Stats
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-normal">
+                Arcade-wide progress
+              </h2>
+            </div>
+            <p className="text-sm text-zinc-400">
+              Stored locally in this browser.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            {globalStatCards.map((stat) => (
+              <div
+                key={stat.label}
+                className={`flex min-h-24 flex-col justify-between rounded-md border px-4 py-3 ${stat.className}`}
+              >
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em]">
+                  {stat.label}
+                </p>
+                <p className="mt-2 text-2xl font-black leading-tight text-white tabular-nums">
+                  {stat.value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr]">
+            <div className="rounded-md border border-white/10 bg-black/20 px-4 py-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                Play Counts
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {games.map((game) => (
+                  <div
+                    key={game.slug}
+                    className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2"
+                  >
+                    <p className="text-xs font-bold text-zinc-400">
+                      {game.title}
+                    </p>
+                    <p className="mt-1 text-xl font-black tabular-nums">
+                      {profile.globalStats.gamePlayCounts[game.slug]}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-md border border-white/10 bg-black/20 px-4 py-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                Tic-Tac-Toe Record
+              </p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {ticTacToeRecordCards.map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2"
+                  >
+                    <p className="text-xs font-bold text-zinc-400">{label}</p>
+                    <p className="mt-1 text-xl font-black tabular-nums">
+                      {value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-[0.7fr_1.3fr]">
           <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5 shadow-xl shadow-black/25">

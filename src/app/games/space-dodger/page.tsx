@@ -15,6 +15,7 @@ import {
   saveSoundPreference,
   unlockAudio,
 } from "@/lib/sound";
+import { recordGameStarted } from "@/lib/stats";
 
 const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 720;
@@ -491,6 +492,7 @@ export default function SpaceDodgerPage() {
 
   const restart = () => {
     unlockAudio();
+    recordGameStarted("space-dodger");
     setHasStarted(true);
     inputRef.current = { left: false, right: false };
     setActiveTouchDirection(null);
@@ -503,6 +505,7 @@ export default function SpaceDodgerPage() {
 
   const startGame = () => {
     unlockAudio();
+    recordGameStarted("space-dodger");
     inputRef.current = { left: false, right: false };
     setActiveTouchDirection(null);
     lastFrameRef.current = null;

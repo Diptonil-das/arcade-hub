@@ -15,6 +15,7 @@ import {
   saveSoundPreference,
   unlockAudio,
 } from "@/lib/sound";
+import { recordGameStarted } from "@/lib/stats";
 
 const GRID_SIZE = 24;
 const CANVAS_SIZE = 576;
@@ -432,6 +433,7 @@ export default function CyberSnakePage() {
 
   const restart = () => {
     unlockAudio();
+    recordGameStarted("cyber-snake");
     setHasStarted(true);
     previousGameOverRef.current = false;
     previousScoreRef.current = 0;
@@ -440,6 +442,7 @@ export default function CyberSnakePage() {
 
   const startGame = () => {
     unlockAudio();
+    recordGameStarted("cyber-snake");
     setHasStarted(true);
   };
 

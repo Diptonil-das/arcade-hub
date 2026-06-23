@@ -16,6 +16,7 @@ import {
   saveSoundPreference,
   unlockAudio,
 } from "@/lib/sound";
+import { recordTicTacToeResult } from "@/lib/stats";
 
 type Cell = "X" | "O" | null;
 type Winner = "X" | "O" | "draw" | null;
@@ -233,6 +234,7 @@ export default function AiTicTacToePage() {
       setUnlockedAchievements(
         unlockAchievements("ai-tic-tac-toe", achievementsToUnlock),
       );
+      recordTicTacToeResult(nextWinner);
       setScoreboard((current) => updateScoreboard(current, nextWinner));
       playOutcomeSound(nextWinner, isSoundEnabled);
       return true;
@@ -279,6 +281,7 @@ export default function AiTicTacToePage() {
         playSound("move", isSoundEnabled);
 
         if (aiWinner) {
+          recordTicTacToeResult(aiWinner);
           setScoreboard((current) => updateScoreboard(current, aiWinner));
           playOutcomeSound(aiWinner, isSoundEnabled);
         }
