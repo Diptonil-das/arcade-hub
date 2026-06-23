@@ -491,37 +491,39 @@ export default function CyberSnakePage() {
             {game.description}
           </p>
 
-          <div className="mt-4 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4 lg:mt-8 lg:gap-3">
-            <div className="rounded-md border border-cyan-300/20 bg-cyan-300/10 px-4 py-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-100">
+          <div className="mt-4 grid max-w-xl grid-cols-2 gap-2 lg:mt-8 lg:gap-3 xl:grid-cols-4">
+            <div className="flex min-h-22 flex-col justify-between rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-3 sm:px-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-100 sm:text-[11px]">
                 Score
               </p>
               <p
                 key={scorePulseKey}
-                className="score-pop mt-1 text-3xl font-black text-white"
+                className="score-pop mt-2 text-3xl font-black leading-none text-white tabular-nums"
               >
                 {state.score}
               </p>
             </div>
-            <div className="rounded-md border border-sky-300/20 bg-sky-300/10 px-4 py-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-100">
+            <div className="flex min-h-22 flex-col justify-between rounded-md border border-sky-300/20 bg-sky-300/10 px-3 py-3 sm:px-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-100 sm:text-[11px]">
                 Best Score
               </p>
-              <p className="mt-1 text-3xl font-black text-white">{bestScore}</p>
+              <p className="mt-2 text-3xl font-black leading-none text-white tabular-nums">
+                {bestScore}
+              </p>
             </div>
-            <div className="rounded-md border border-emerald-300/20 bg-emerald-300/10 px-4 py-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald-100">
+            <div className="flex min-h-22 flex-col justify-between rounded-md border border-emerald-300/20 bg-emerald-300/10 px-3 py-3 sm:px-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-100 sm:text-[11px]">
                 Length
               </p>
-              <p className="mt-1 text-3xl font-black text-white">
+              <p className="mt-2 text-3xl font-black leading-none text-white tabular-nums">
                 {state.snake.length}
               </p>
             </div>
-            <div className="rounded-md border border-fuchsia-300/20 bg-fuchsia-300/10 px-4 py-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-fuchsia-100">
+            <div className="flex min-h-22 flex-col justify-between rounded-md border border-fuchsia-300/20 bg-fuchsia-300/10 px-3 py-3 sm:px-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-fuchsia-100 sm:text-[11px]">
                 Status
               </p>
-              <p className="mt-2 text-sm font-black uppercase tracking-[0.16em] text-white">
+              <p className="mt-2 text-lg font-black uppercase leading-none tracking-[0.12em] text-white sm:text-xl">
                 {state.gameOver ? "Game Over" : hasStarted ? "Live" : "Ready"}
               </p>
             </div>
