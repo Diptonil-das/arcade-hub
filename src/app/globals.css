@@ -26,3 +26,81 @@ html {
   background: #67e8f9;
   color: #05060d;
 }
+
+@keyframes arcade-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+}
+
+@keyframes arcade-scan {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 48px;
+  }
+}
+
+@keyframes score-pop {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  38% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 18px rgba(103, 232, 249, 0.7));
+  }
+}
+
+@keyframes danger-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.arcade-drift {
+  animation: arcade-drift 18s ease-in-out infinite;
+}
+
+.arcade-scanlines {
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.055) 1px,
+    transparent 1px
+  );
+  background-size: 100% 12px;
+  animation: arcade-scan 2.8s linear infinite;
+}
+
+.score-pop {
+  animation: score-pop 360ms ease-out;
+}
+
+.danger-pulse {
+  animation: danger-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcade-drift,
+  .arcade-scanlines,
+  .score-pop,
+  .danger-pulse {
+    animation: none;
+  }
+}

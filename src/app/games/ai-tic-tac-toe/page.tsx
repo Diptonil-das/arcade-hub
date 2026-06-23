@@ -317,11 +317,12 @@ export default function AiTicTacToePage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#05060d] px-6 py-6 text-white sm:px-8 lg:px-12">
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_18%_16%,rgba(251,191,36,0.2),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(244,63,94,0.17),transparent_28%),radial-gradient(circle_at_50%_88%,rgba(34,211,238,0.12),transparent_34%),linear-gradient(135deg,#05060d_0%,#120b12_52%,#08131d_100%)]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#05060d] px-4 py-4 text-white sm:px-6 lg:px-8">
+      <div className="arcade-drift absolute -inset-8 -z-20 bg-[radial-gradient(circle_at_18%_16%,rgba(251,191,36,0.27),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(244,63,94,0.22),transparent_28%),radial-gradient(circle_at_50%_88%,rgba(34,211,238,0.16),transparent_34%),linear-gradient(135deg,#05060d_0%,#120b12_52%,#08131d_100%)]" />
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:72px_72px] opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_88%)]" />
+      <div className="arcade-scanlines pointer-events-none absolute inset-0 -z-10 opacity-[0.07]" />
 
-      <header className="mx-auto flex max-w-6xl items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-md">
+      <header className="mx-auto flex max-w-[1800px] items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-md">
         <Link
           href="/"
           className="text-sm font-semibold uppercase tracking-[0.26em] text-zinc-200"
@@ -336,15 +337,16 @@ export default function AiTicTacToePage() {
         </Link>
       </header>
 
-      <section className="mx-auto grid max-w-6xl items-center gap-8 py-10 lg:min-h-[calc(100vh-96px)] lg:grid-cols-[0.82fr_1.18fr] lg:py-14">
-        <div>
+      <section className="mx-auto grid max-w-[1800px] gap-5 py-5 lg:min-h-[calc(100vh-76px)] lg:grid-cols-[minmax(280px,0.52fr)_minmax(640px,1.48fr)] lg:items-stretch">
+        <div className="flex flex-col justify-between gap-5 rounded-lg border border-white/10 bg-black/20 p-4 backdrop-blur-sm lg:p-5">
+          <div>
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-amber-200">
             {game.label}
           </p>
-          <h1 className="mt-4 text-5xl font-black leading-none tracking-normal sm:text-7xl">
+          <h1 className="mt-3 text-4xl font-black leading-none tracking-normal sm:text-6xl lg:text-7xl">
             {game.title}
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-300">
+          <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 lg:text-lg lg:leading-8">
             {game.description}
           </p>
 
@@ -394,8 +396,9 @@ export default function AiTicTacToePage() {
               You are X / AI is O
             </p>
           </div>
+          </div>
 
-          <div className="mt-6 max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
+          <div className="max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
                 Achievements
@@ -429,15 +432,28 @@ export default function AiTicTacToePage() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/40 sm:p-5">
+        <div className={`relative overflow-hidden rounded-lg border bg-white/[0.035] p-3 shadow-2xl transition duration-500 sm:p-4 lg:p-5 ${
+          winner === "X"
+            ? "border-cyan-200/60 shadow-cyan-950/50"
+            : winner === "O"
+              ? "border-rose-300/55 shadow-rose-950/50"
+              : winner === "draw"
+                ? "border-amber-200/55 shadow-amber-950/40"
+                : "border-amber-200/20 shadow-amber-950/35"
+        }`}>
           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${game.accent}`} />
-          <div className="rounded-md border border-amber-300/20 bg-black/35 p-4 shadow-[inset_0_0_32px_rgba(251,191,36,0.08)] sm:p-5">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(251,191,36,0.14),transparent_50%)]" />
+          <div className="relative flex h-full min-h-[min(74vh,940px)] flex-col rounded-md border border-amber-300/20 bg-black/45 p-3 shadow-[inset_0_0_60px_rgba(251,191,36,0.12),0_0_50px_rgba(251,191,36,0.1)] sm:p-5">
             <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
                   Neural Board
                 </p>
-                <h2 className="mt-2 text-2xl font-black tracking-normal text-white">
+                <h2
+                  className={`mt-2 text-2xl font-black tracking-normal text-white transition sm:text-3xl ${
+                    winner ? "score-pop" : ""
+                  }`}
+                >
                   {getStatusText(winner, isAiThinking)}
                 </h2>
               </div>
@@ -449,7 +465,7 @@ export default function AiTicTacToePage() {
               </div>
             </div>
 
-            <div className="mx-auto grid aspect-square w-full max-w-[520px] grid-cols-3 gap-3">
+            <div className="mx-auto grid aspect-square w-full max-w-[min(74vh,760px)] flex-1 grid-cols-3 gap-2 sm:gap-3">
               {board.map((cell, index) => {
                 const isWinningCell = winningCells.has(index);
 
@@ -460,10 +476,10 @@ export default function AiTicTacToePage() {
                     onClick={() => handleCellClick(index)}
                     disabled={Boolean(cell) || Boolean(winner) || isAiThinking}
                     aria-label={`Cell ${index + 1}${cell ? ` occupied by ${cell}` : ""}`}
-                    className={`grid aspect-square place-items-center rounded-md border text-5xl font-black tracking-normal transition sm:text-7xl ${
+                    className={`grid aspect-square place-items-center rounded-md border text-5xl font-black tracking-normal transition duration-200 sm:text-7xl lg:text-8xl ${
                       isWinningCell
-                        ? "border-cyan-200 bg-cyan-300/20 shadow-[0_0_28px_rgba(103,232,249,0.28)]"
-                        : "border-white/10 bg-white/[0.045] hover:border-amber-200/60 hover:bg-amber-200/10"
+                        ? "score-pop border-cyan-200 bg-cyan-300/20 shadow-[0_0_36px_rgba(103,232,249,0.38)]"
+                        : "border-white/10 bg-white/[0.045] shadow-[inset_0_0_18px_rgba(255,255,255,0.025)] hover:border-amber-200/60 hover:bg-amber-200/10 hover:shadow-[0_0_24px_rgba(251,191,36,0.14)]"
                     } ${cell === "X" ? "text-cyan-200" : "text-rose-200"} disabled:cursor-default`}
                   >
                     {cell}

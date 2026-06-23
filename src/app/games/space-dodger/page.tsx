@@ -306,6 +306,7 @@ export default function SpaceDodgerPage() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [activeTouchDirection, setActiveTouchDirection] =
     useState<MoveDirection | null>(null);
+  const [scorePulseKey, setScorePulseKey] = useState(0);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const game = getGame("space-dodger");
 
@@ -477,6 +478,7 @@ export default function SpaceDodgerPage() {
 
     if (milestone > previousMilestoneRef.current) {
       playSound("milestone", isSoundEnabled);
+      setScorePulseKey((current) => current + 1);
     }
 
     previousMilestoneRef.current = milestone;
@@ -554,11 +556,12 @@ export default function SpaceDodgerPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#05060d] px-6 py-6 text-white sm:px-8 lg:px-12">
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_18%_16%,rgba(217,70,239,0.2),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_50%_88%,rgba(167,139,250,0.14),transparent_34%),linear-gradient(135deg,#05060d_0%,#09091a_52%,#06141f_100%)]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#05060d] px-4 py-4 text-white sm:px-6 lg:px-8">
+      <div className="arcade-drift absolute -inset-8 -z-20 bg-[radial-gradient(circle_at_18%_16%,rgba(217,70,239,0.26),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.23),transparent_28%),radial-gradient(circle_at_50%_88%,rgba(167,139,250,0.18),transparent_34%),linear-gradient(135deg,#05060d_0%,#09091a_52%,#06141f_100%)]" />
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:72px_72px] opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_88%)]" />
+      <div className="arcade-scanlines pointer-events-none absolute inset-0 -z-10 opacity-[0.07]" />
 
-      <header className="mx-auto flex max-w-6xl items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-md">
+      <header className="mx-auto flex max-w-[1800px] items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-md">
         <Link
           href="/"
           className="text-sm font-semibold uppercase tracking-[0.26em] text-zinc-200"
@@ -573,15 +576,16 @@ export default function SpaceDodgerPage() {
         </Link>
       </header>
 
-      <section className="mx-auto grid max-w-6xl items-center gap-8 py-10 lg:min-h-[calc(100vh-96px)] lg:grid-cols-[0.82fr_1.18fr] lg:py-14">
-        <div>
+      <section className="mx-auto grid max-w-[1800px] gap-5 py-5 lg:min-h-[calc(100vh-76px)] lg:grid-cols-[minmax(280px,0.52fr)_minmax(620px,1.48fr)] lg:items-stretch">
+        <div className="flex flex-col justify-between gap-5 rounded-lg border border-white/10 bg-black/20 p-4 backdrop-blur-sm lg:p-5">
+          <div>
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-fuchsia-200">
             {game.label}
           </p>
-          <h1 className="mt-4 text-5xl font-black leading-none tracking-normal sm:text-7xl">
+          <h1 className="mt-3 text-4xl font-black leading-none tracking-normal sm:text-6xl lg:text-7xl">
             {game.title}
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-300">
+          <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 lg:text-lg lg:leading-8">
             {game.description}
           </p>
 
@@ -590,7 +594,12 @@ export default function SpaceDodgerPage() {
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-100">
                 Score
               </p>
-              <p className="mt-1 text-3xl font-black text-white">{state.score}</p>
+              <p
+                key={scorePulseKey}
+                className="score-pop mt-1 text-3xl font-black text-white"
+              >
+                {state.score}
+              </p>
             </div>
             <div className="rounded-md border border-sky-300/20 bg-sky-300/10 px-4 py-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-sky-100">
@@ -635,8 +644,9 @@ export default function SpaceDodgerPage() {
               Arrow keys move left / right
             </p>
           </div>
+          </div>
 
-          <div className="mt-6 max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
+          <div className="max-w-xl rounded-md border border-white/10 bg-white/[0.035] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-400">
                 Achievements
@@ -670,29 +680,36 @@ export default function SpaceDodgerPage() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/40 sm:p-5">
+        <div className={`relative overflow-hidden rounded-lg border bg-white/[0.035] p-3 shadow-2xl transition duration-500 sm:p-4 lg:p-5 ${
+          state.gameOver
+            ? "border-rose-300/55 shadow-rose-950/50"
+            : "border-fuchsia-200/20 shadow-fuchsia-950/40"
+        }`}>
           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${game.accent}`} />
-          <div className="relative rounded-md border border-fuchsia-300/20 bg-black/35 p-3 shadow-[inset_0_0_32px_rgba(217,70,239,0.08)] sm:p-4">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(217,70,239,0.14),transparent_50%)]" />
+          <div className="relative flex h-full min-h-[min(76vh,980px)] flex-col items-center justify-center rounded-md border border-fuchsia-300/20 bg-black/45 p-2 shadow-[inset_0_0_60px_rgba(217,70,239,0.13),0_0_50px_rgba(217,70,239,0.12)] sm:p-4">
             <canvas
               ref={canvasRef}
               width={CANVAS_WIDTH}
               height={CANVAS_HEIGHT}
               aria-label="Space Dodger game board"
-              className="block aspect-[8/9] w-full rounded-sm border border-white/10 bg-[#05060d]"
+              className={`block aspect-[8/9] max-h-[calc(100vh-160px)] w-full max-w-[min(78vh,900px)] rounded-sm border bg-[#05060d] shadow-[0_0_44px_rgba(217,70,239,0.22)] transition duration-500 ${
+                state.gameOver ? "border-rose-300/70" : "border-fuchsia-200/30"
+              }`}
             />
 
-            <div className="mt-3 flex gap-3 lg:hidden">
+            <div className="mt-3 flex w-full max-w-[min(78vh,900px)] gap-3 lg:hidden">
               {renderMoveButton("left", "Left", "\u2190")}
               {renderMoveButton("right", "Right", "\u2192")}
             </div>
 
             {state.gameOver ? (
-              <div className="absolute inset-3 grid place-items-center rounded-sm bg-black/72 p-5 backdrop-blur-sm sm:inset-4">
+              <div className="absolute inset-2 grid place-items-center rounded-sm bg-black/75 p-5 backdrop-blur-sm sm:inset-4">
                 <div className="max-w-sm text-center">
-                  <p className="font-mono text-xs uppercase tracking-[0.28em] text-fuchsia-200">
+                  <p className="danger-pulse font-mono text-xs uppercase tracking-[0.28em] text-rose-200">
                     Hull breach detected
                   </p>
-                  <h2 className="mt-3 text-4xl font-black tracking-normal text-white">
+                  <h2 className="mt-3 text-5xl font-black tracking-normal text-white">
                     Game Over
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-zinc-300">
