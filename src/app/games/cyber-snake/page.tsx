@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { type TouchEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   achievementDefinitions,
   readUnlockedAchievements,
@@ -20,6 +20,7 @@ const GRID_SIZE = 24;
 const CANVAS_SIZE = 576;
 const CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
 const TICK_RATE_MS = 105;
+const SWIPE_THRESHOLD_PX = 32;
 const BEST_SCORE_STORAGE_KEY = "arcade-hub:cyber-snake:best-score";
 
 type Direction = "up" | "down" | "left" | "right";
@@ -236,6 +237,7 @@ export default function CyberSnakePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previousGameOverRef = useRef(false);
   const previousScoreRef = useRef(0);
+  const touchStartRef = useRef<Point | null>(null);
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
@@ -305,32 +307,34 @@ export default function CyberSnakePage() {
     };
   }, [state.score]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const directionByKey: Partial<Record<string, Direction>> = {
-        ArrowDown: "down",
-        ArrowLeft: "left",
-        ArrowRight: "right",
-        ArrowUp: "up",
-      };
-      const nextDirection = directionByKey[event.key];
-
-      if (!nextDirection) {
-        return;
+  const queueDirection = useCallback((nextDirection: Direction) => {
+    unlockAudio();
+    setState((current) => {
+      if (current.gameOver || isOpposite(current.direction, nextDirection)) {
+        return current;
       }
 
-      event.preventDefault();
-      unlockAudio();
-      setState((current) => {
-        if (current.gameOver || isOpposite(current.direction, nextDirection)) {
-          return current;
-        }
+      return {
+        ...current,
+        nextDirection,
+      };
+    });
+  }, []);
 
-        return {
-          ...current,
-          nextDirection,
-        };
-      });
+  useEffect(() => {
+    const directionByKey: Partial<Record<string, Direction>> = {
+      ArrowDown: "down",
+      ArrowLeft: "left",
+      ArrowRight: "right",
+      ArrowUp: "up",
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const nextDirection = directionByKey[event.key];
+
+      if (nextDirection) {
+        event.preventDefault();
+        queueDirection(nextDirection);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -338,7 +342,50 @@ export default function CyberSnakePage() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [queueDirection]);
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.changedTouches[0];
+
+    if (!touch) {
+      return;
+    }
+
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+    touchStartRef.current = null;
+
+    if (!start || !touch) {
+      return;
+    }
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+
+    if (
+      Math.max(Math.abs(deltaX), Math.abs(deltaY)) < SWIPE_THRESHOLD_PX
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    queueDirection(
+      Math.abs(deltaX) > Math.abs(deltaY)
+        ? deltaX > 0
+          ? "right"
+          : "left"
+        : deltaY > 0
+          ? "down"
+          : "up",
+    );
+  };
 
   useEffect(() => {
     if (state.gameOver) {
@@ -517,13 +564,22 @@ export default function CyberSnakePage() {
         <div className="relative overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/40 sm:p-5">
           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${game.accent}`} />
           <div className="relative rounded-md border border-cyan-300/20 bg-black/35 p-3 shadow-[inset_0_0_32px_rgba(34,211,238,0.08)] sm:p-4">
-            <canvas
-              ref={canvasRef}
-              width={CANVAS_SIZE}
-              height={CANVAS_SIZE}
-              aria-label="Cyber Snake game board"
-              className="block aspect-square w-full rounded-sm border border-white/10 bg-[#05060d]"
-            />
+            <div
+              className="touch-none"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={() => {
+                touchStartRef.current = null;
+              }}
+            >
+              <canvas
+                ref={canvasRef}
+                width={CANVAS_SIZE}
+                height={CANVAS_SIZE}
+                aria-label="Cyber Snake game board"
+                className="block aspect-square w-full rounded-sm border border-white/10 bg-[#05060d]"
+              />
+            </div>
 
             {state.gameOver ? (
               <div className="absolute inset-3 grid place-items-center rounded-sm bg-black/72 p-5 backdrop-blur-sm sm:inset-4">

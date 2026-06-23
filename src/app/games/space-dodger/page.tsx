@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { type PointerEvent, useEffect, useRef, useState } from "react";
 import {
   achievementDefinitions,
   readUnlockedAchievements,
@@ -51,6 +51,8 @@ type InputState = {
   left: boolean;
   right: boolean;
 };
+
+type MoveDirection = keyof InputState;
 
 function createInitialState(): GameState {
   return {
@@ -302,6 +304,8 @@ export default function SpaceDodgerPage() {
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [activeTouchDirection, setActiveTouchDirection] =
+    useState<MoveDirection | null>(null);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const game = getGame("space-dodger");
 
@@ -481,6 +485,7 @@ export default function SpaceDodgerPage() {
   const restart = () => {
     unlockAudio();
     inputRef.current = { left: false, right: false };
+    setActiveTouchDirection(null);
     lastFrameRef.current = null;
     asteroidIdRef.current = 0;
     previousGameOverRef.current = false;
@@ -496,6 +501,52 @@ export default function SpaceDodgerPage() {
 
       return nextValue;
     });
+  };
+
+  const pressMoveControl = (
+    direction: MoveDirection,
+    event: PointerEvent<HTMLButtonElement>,
+  ) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    unlockAudio();
+    inputRef.current = {
+      left: direction === "left",
+      right: direction === "right",
+    };
+    setActiveTouchDirection(direction);
+  };
+
+  const releaseMoveControl = (direction: MoveDirection) => {
+    inputRef.current[direction] = false;
+    setActiveTouchDirection((current) => (current === direction ? null : current));
+  };
+
+  const renderMoveButton = (
+    direction: MoveDirection,
+    label: string,
+    symbol: string,
+  ) => {
+    const isActive = activeTouchDirection === direction;
+
+    return (
+      <button
+        type="button"
+        aria-label={`Move ${label.toLowerCase()}`}
+        onPointerDown={(event) => pressMoveControl(direction, event)}
+        onPointerUp={() => releaseMoveControl(direction)}
+        onPointerCancel={() => releaseMoveControl(direction)}
+        onLostPointerCapture={() => releaseMoveControl(direction)}
+        onContextMenu={(event) => event.preventDefault()}
+        className={`grid h-16 flex-1 touch-none select-none place-items-center rounded-md border text-2xl font-black transition sm:h-18 ${
+          isActive
+            ? "border-fuchsia-200 bg-fuchsia-300 text-zinc-950 shadow-[0_0_28px_rgba(217,70,239,0.35)]"
+            : "border-fuchsia-300/25 bg-fuchsia-300/10 text-fuchsia-100 active:border-fuchsia-200 active:bg-fuchsia-300 active:text-zinc-950"
+        }`}
+      >
+        {symbol}
+      </button>
+    );
   };
 
   if (!game) {
@@ -629,6 +680,11 @@ export default function SpaceDodgerPage() {
               aria-label="Space Dodger game board"
               className="block aspect-[8/9] w-full rounded-sm border border-white/10 bg-[#05060d]"
             />
+
+            <div className="mt-3 flex gap-3 lg:hidden">
+              {renderMoveButton("left", "Left", "\u2190")}
+              {renderMoveButton("right", "Right", "\u2192")}
+            </div>
 
             {state.gameOver ? (
               <div className="absolute inset-3 grid place-items-center rounded-sm bg-black/72 p-5 backdrop-blur-sm sm:inset-4">
