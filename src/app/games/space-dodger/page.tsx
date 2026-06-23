@@ -303,6 +303,7 @@ export default function SpaceDodgerPage() {
   const previousMilestoneRef = useRef(0);
   const [state, setState] = useState<GameState>(() => createInitialState());
   const [bestScore, setBestScore] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [activeTouchDirection, setActiveTouchDirection] =
     useState<MoveDirection | null>(null);
@@ -388,6 +389,10 @@ export default function SpaceDodgerPage() {
       return false;
     };
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!hasStarted) {
+        return;
+      }
+
       if (setKey(event.key, true)) {
         event.preventDefault();
         unlockAudio();
@@ -406,10 +411,10 @@ export default function SpaceDodgerPage() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [hasStarted]);
 
   useEffect(() => {
-    if (state.gameOver) {
+    if (!hasStarted || state.gameOver) {
       lastFrameRef.current = null;
       return;
     }
@@ -429,10 +434,10 @@ export default function SpaceDodgerPage() {
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [state.gameOver]);
+  }, [hasStarted, state.gameOver]);
 
   useEffect(() => {
-    if (state.gameOver) {
+    if (!hasStarted || state.gameOver) {
       return;
     }
 
@@ -457,7 +462,7 @@ export default function SpaceDodgerPage() {
     return () => {
       window.clearInterval(spawn);
     };
-  }, [state.gameOver]);
+  }, [hasStarted, state.gameOver]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -486,6 +491,7 @@ export default function SpaceDodgerPage() {
 
   const restart = () => {
     unlockAudio();
+    setHasStarted(true);
     inputRef.current = { left: false, right: false };
     setActiveTouchDirection(null);
     lastFrameRef.current = null;
@@ -493,6 +499,14 @@ export default function SpaceDodgerPage() {
     previousGameOverRef.current = false;
     previousMilestoneRef.current = 0;
     setState(createInitialState());
+  };
+
+  const startGame = () => {
+    unlockAudio();
+    inputRef.current = { left: false, right: false };
+    setActiveTouchDirection(null);
+    lastFrameRef.current = null;
+    setHasStarted(true);
   };
 
   const toggleSound = () => {
@@ -510,6 +524,10 @@ export default function SpaceDodgerPage() {
     event: PointerEvent<HTMLButtonElement>,
   ) => {
     event.preventDefault();
+    if (!hasStarted) {
+      return;
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId);
     unlockAudio();
     inputRef.current = {
@@ -576,20 +594,20 @@ export default function SpaceDodgerPage() {
         </Link>
       </header>
 
-      <section className="mx-auto grid max-w-[1800px] gap-5 py-5 lg:min-h-[calc(100vh-76px)] lg:grid-cols-[minmax(280px,0.52fr)_minmax(620px,1.48fr)] lg:items-stretch">
-        <div className="flex flex-col justify-between gap-5 rounded-lg border border-white/10 bg-black/20 p-4 backdrop-blur-sm lg:p-5">
+      <section className="mx-auto grid max-w-[1800px] gap-3 py-3 lg:min-h-[calc(100vh-76px)] lg:grid-cols-[minmax(280px,0.52fr)_minmax(620px,1.48fr)] lg:items-stretch lg:gap-5 lg:py-5">
+        <div className="order-2 flex flex-col justify-between gap-4 rounded-lg border border-white/10 bg-black/20 p-3 backdrop-blur-sm lg:order-1 lg:gap-5 lg:p-5">
           <div>
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-fuchsia-200">
             {game.label}
           </p>
-          <h1 className="mt-3 text-4xl font-black leading-none tracking-normal sm:text-6xl lg:text-7xl">
+          <h1 className="mt-2 text-3xl font-black leading-none tracking-normal sm:text-6xl lg:mt-3 lg:text-7xl">
             {game.title}
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 lg:text-lg lg:leading-8">
+          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-300 sm:text-base lg:mt-5 lg:text-lg lg:leading-8">
             {game.description}
           </p>
 
-          <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-4 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4 lg:mt-8 lg:gap-3">
             <div className="rounded-md border border-cyan-300/20 bg-cyan-300/10 px-4 py-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-100">
                 Score
@@ -620,18 +638,18 @@ export default function SpaceDodgerPage() {
                 Status
               </p>
               <p className="mt-2 text-sm font-black uppercase tracking-[0.16em] text-white">
-                {state.gameOver ? "Game Over" : "Live"}
+                {state.gameOver ? "Game Over" : hasStarted ? "Live" : "Ready"}
               </p>
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-2 lg:mt-6 lg:gap-3">
             <button
               type="button"
-              onClick={restart}
+              onClick={hasStarted ? restart : startGame}
               className="h-12 rounded-md bg-cyan-300 px-6 text-sm font-black uppercase tracking-[0.18em] text-zinc-950 transition hover:bg-cyan-200"
             >
-              Restart
+              {hasStarted ? "Restart" : "Start Game"}
             </button>
             <button
               type="button"
@@ -680,30 +698,51 @@ export default function SpaceDodgerPage() {
           </div>
         </div>
 
-        <div className={`relative overflow-hidden rounded-lg border bg-white/[0.035] p-3 shadow-2xl transition duration-500 sm:p-4 lg:p-5 ${
+        <div className={`order-1 relative overflow-hidden rounded-lg border bg-white/[0.035] p-2 shadow-2xl transition duration-500 sm:p-3 lg:order-2 lg:p-5 ${
           state.gameOver
             ? "border-rose-300/55 shadow-rose-950/50"
             : "border-fuchsia-200/20 shadow-fuchsia-950/40"
         }`}>
           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${game.accent}`} />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(217,70,239,0.14),transparent_50%)]" />
-          <div className="relative flex h-full min-h-[min(76vh,980px)] flex-col items-center justify-center rounded-md border border-fuchsia-300/20 bg-black/45 p-2 shadow-[inset_0_0_60px_rgba(217,70,239,0.13),0_0_50px_rgba(217,70,239,0.12)] sm:p-4">
+          <div className="relative flex h-full min-h-[calc(100svh-104px)] flex-col items-center justify-center rounded-md border border-fuchsia-300/20 bg-black/45 p-1 shadow-[inset_0_0_60px_rgba(217,70,239,0.13),0_0_50px_rgba(217,70,239,0.12)] sm:p-3 lg:min-h-[min(76vh,980px)] lg:p-4">
             <canvas
               ref={canvasRef}
               width={CANVAS_WIDTH}
               height={CANVAS_HEIGHT}
               aria-label="Space Dodger game board"
-              className={`block aspect-[8/9] max-h-[calc(100vh-160px)] w-full max-w-[min(78vh,900px)] rounded-sm border bg-[#05060d] shadow-[0_0_44px_rgba(217,70,239,0.22)] transition duration-500 ${
+              className={`block aspect-[8/9] max-h-[calc(100svh-190px)] w-full max-w-[min(96vw,calc((100svh-190px)*0.888))] rounded-sm border bg-[#05060d] shadow-[0_0_44px_rgba(217,70,239,0.22)] transition duration-500 sm:max-h-[calc(100svh-172px)] sm:max-w-[min(92vw,calc((100svh-172px)*0.888))] lg:max-h-[calc(100vh-160px)] lg:max-w-[min(78vh,900px)] ${
                 state.gameOver ? "border-rose-300/70" : "border-fuchsia-200/30"
               }`}
             />
 
-            <div className="mt-3 flex w-full max-w-[min(78vh,900px)] gap-3 lg:hidden">
+            <div className="mt-2 flex w-full max-w-[min(96vw,calc((100svh-190px)*0.888))] gap-2 sm:mt-3 sm:max-w-[min(92vw,calc((100svh-172px)*0.888))] lg:hidden">
               {renderMoveButton("left", "Left", "\u2190")}
               {renderMoveButton("right", "Right", "\u2192")}
             </div>
 
-            {state.gameOver ? (
+            {!hasStarted ? (
+              <div className="absolute inset-2 grid place-items-center rounded-sm bg-black/72 p-5 backdrop-blur-sm sm:inset-4">
+                <div className="max-w-sm text-center">
+                  <p className="font-mono text-xs uppercase tracking-[0.28em] text-fuchsia-200">
+                    Docked and ready
+                  </p>
+                  <h2 className="mt-3 text-4xl font-black tracking-normal text-white sm:text-5xl">
+                    Space Dodger
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-zinc-300">
+                    Start the flight, then hold the side controls or arrow keys.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={startGame}
+                    className="mt-6 h-12 rounded-md bg-fuchsia-300 px-6 text-sm font-black uppercase tracking-[0.18em] text-zinc-950 transition hover:bg-fuchsia-200"
+                  >
+                    Start Game
+                  </button>
+                </div>
+              </div>
+            ) : state.gameOver ? (
               <div className="absolute inset-2 grid place-items-center rounded-sm bg-black/75 p-5 backdrop-blur-sm sm:inset-4">
                 <div className="max-w-sm text-center">
                   <p className="danger-pulse font-mono text-xs uppercase tracking-[0.28em] text-rose-200">
